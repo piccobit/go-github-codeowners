@@ -10,10 +10,9 @@ import (
 	"fmt"
 	"os"
 
-	"golang.org/x/oauth2"
-
-	"github.com/ddub/go-github-codeowners/codeowners"
 	"github.com/google/go-github/github"
+	"github.com/piccobit/go-github-codeowners/codeowners"
+	"golang.org/x/oauth2"
 )
 
 func main() {
