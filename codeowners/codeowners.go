@@ -99,7 +99,7 @@ func finduseremail(email string, ctx context.Context, ch comms) {
 func expandteam(fullteam string, ctx context.Context, ch comms) {
 	defer ch.wait.Done()
 	split := strings.Index(fullteam, "/")
-	teams, _, err := client.Organizations.ListTeams(ctx, fullteam[1:split], &github.ListOptions{})
+	teams, _, err := client.Teams.ListTeams(ctx, fullteam[1:split], &github.ListOptions{})
 	if err != nil {
 		ch.err <- err
 		return
@@ -116,8 +116,8 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 		ch.err <- errors.New(fmt.Sprintf("Failed to find team matching %v", teamname))
 		return
 	}
-	opt := github.OrganizationListTeamMembersOptions{}
-	users, _, err := client.Organizations.ListTeamMembers(ctx, teamid, &opt)
+	opt := github.TeamListTeamMembersOptions{}
+	users, _, err := client.Teams.ListTeamMembers(ctx, teamid, &opt)
 	if err != nil {
 		ch.err <- err
 		return
