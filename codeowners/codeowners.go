@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/mail"
 	"strings"
 	"sync"
 
 	"github.com/bmatcuk/doublestar"
 	"github.com/google/go-github/v18/github"
+	"github.com/rs/zerolog/log"
 )
 
 // comms holds the channels that are used for communicating async
@@ -62,10 +62,14 @@ func fetch(ctx context.Context, owner string, repo string) (string, error) {
 	var err error
 	for _, filepath := range files {
 		content, _, _, err = client.Repositories.GetContents(ctx, owner, repo, filepath+"CODEOWNERS", &options)
+
 		if err != nil {
-			log.Print("Error getting code owners ", err)
+			log.Warn().Str("filepath", filepath).Msg("Warning getting code owners file")
 			continue
+		} else {
+			log.Debug().Str("filepath", filepath).Msg("Found CODEOWNERS file")
 		}
+
 		return content.GetContent()
 	}
 	return "", err
