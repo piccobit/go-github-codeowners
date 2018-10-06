@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/bmatcuk/doublestar"
-	"github.com/google/go-github/github"
 	"log"
 	"net/mail"
 	"strings"
 	"sync"
+
+	"github.com/bmatcuk/doublestar"
+	"github.com/google/go-github/v18/github"
 )
 
 // comms holds the channels that are used for communicating async
