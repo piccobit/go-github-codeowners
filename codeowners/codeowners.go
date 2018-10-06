@@ -78,8 +78,9 @@ func fetch(ctx context.Context, owner string, repo string) (string, error) {
 // takes a username and asks the github api for full information about a user which is sent through the data channel as a github.User struct
 func fetchuser(name string, ctx context.Context, ch comms) {
 	defer ch.wait.Done()
-	user, _, err := client.Users.Get(ctx, name)
+	user, resp, err := client.Users.Get(ctx, name)
 	if err != nil {
+		log.Error().Err(err).Interface("resp", resp).Msg("fetchuser")
 		ch.err <- err
 	} else {
 		ch.data <- user
@@ -163,9 +164,15 @@ func Get(ctx context.Context, cl *github.Client, owner string, repo string) (cod
 	if err != nil {
 		return obj, err
 	}
+
+	log.Debug().Str("content", content).Msg("fetch")
+
 	for _, line := range strings.Split(content, "\n") {
 		words := strings.Fields(line)
+
 		if len(words) > 1 {
+			log.Debug().Strs("words", words).Msg("fetch")
+
 			if words[0] == "*" {
 				words[0] = "**"
 			}
