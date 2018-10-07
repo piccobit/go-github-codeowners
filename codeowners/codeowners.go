@@ -194,10 +194,12 @@ func (co codeOwners) Match(ctx context.Context, path string) (users []*github.Us
 		match, _ := doublestar.Match(pattern.path, path)
 		if match {
 			owners = pattern.owners
+
+			log.Debug().Interface("owners", owners).Interface("pattern", pattern).Msg("Found match")
 		}
 	}
 	if owners == nil {
-		error_slice = append(error_slice, errors.New("Failed to find match"))
+		error_slice = append(error_slice, errors.New("Failed to find owner"))
 		return nil, error_slice
 	}
 	var wg sync.WaitGroup
