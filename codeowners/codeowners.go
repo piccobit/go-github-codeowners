@@ -105,7 +105,7 @@ func finduseremail(email string, ctx context.Context, ch comms) {
 func expandteam(fullteam string, ctx context.Context, ch comms) {
 	defer ch.wait.Done()
 	split := strings.Index(fullteam, "/")
-	teams, _, err := client.Teams.ListTeams(ctx, fullteam[1:split], &github.ListOptions{})
+	teams, _, err := client.Teams.ListTeams(ctx, fullteam[1:split], &github.ListOptions{PerPage:100})
 	if err != nil {
 		ch.err <- err
 		return
