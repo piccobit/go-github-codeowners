@@ -104,24 +104,41 @@ func finduseremail(email string, ctx context.Context, ch comms) {
 // this takes a string team name in the form of org/slug and sends the github users back through the data channel
 func expandteam(fullteam string, ctx context.Context, ch comms) {
 	defer ch.wait.Done()
-	split := strings.Index(fullteam, "/")
-	teams, _, err := client.Teams.ListTeams(ctx, fullteam[1:split], &github.ListOptions{PerPage:100})
-	if err != nil {
-		ch.err <- err
-		return
-	}
-	teamname := fullteam[split+1:]
+	
 	var teamid int64
-	for _, team := range teams {
-		if teamname == *team.Slug {
-			teamid = *team.ID
+	
+	split := strings.Index(fullteam, "/")
+	orga := fullteam[1:split]
+	teamname := fullteam[split+1:]
+	opts := &github.ListOptions{}
+	
+	for {
+		teams, resp, err := client.Teams.ListTeams(ctx, orga, opts)
+		
+		if err != nil {
+			ch.err <- err
+			return
+		}
+		
+		for _, team := range teams {
+			if teamname == *team.Slug {
+				teamid = *team.ID
+				break
+			}
+		}
+		
+		if resp.NextPage == 0 {
 			break
 		}
+		
+		opts.Page = resp.NextPage
 	}
+	
 	if teamid == 0 {
 		ch.err <- errors.New(fmt.Sprintf("Failed to find team matching %v", teamname))
 		return
 	}
+	
 	opt := github.TeamListTeamMembersOptions{}
 	users, _, err := client.Teams.ListTeamMembers(ctx, teamid, &opt)
 	if err != nil {
