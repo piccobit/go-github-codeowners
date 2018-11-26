@@ -21,7 +21,7 @@ type comms struct {
 }
 
 // this struct holds the description of a whole codeowners file
-type codeOwners struct {
+type CodeOwners struct {
 	owner    string
 	repo     string
 	patterns []codeOwner
@@ -34,7 +34,7 @@ type codeOwner struct {
 }
 
 // format a codeOwners struct back into a string
-func (co codeOwners) String() string {
+func (co CodeOwners) String() string {
 	lines := make([]string, len(co.patterns))
 	for idx, owner := range co.patterns {
 		lines[idx] = owner.String()
@@ -89,7 +89,7 @@ func fetchuser(name string, ctx context.Context, ch comms) {
 
 // takes an email string, parses it out to ensure validity and then constructs a github.User struct to send back down the data channel
 // the github api does not allow for searching by an email address so this is the best that I can manage
-func finduseremail(email string, ctx context.Context, ch comms) {
+func finduseremail(email string, _ context.Context, ch comms) {
 	defer ch.wait.Done()
 	e, err := mail.ParseAddress(email)
 	if err != nil {
@@ -104,41 +104,41 @@ func finduseremail(email string, ctx context.Context, ch comms) {
 // this takes a string team name in the form of org/slug and sends the github users back through the data channel
 func expandteam(fullteam string, ctx context.Context, ch comms) {
 	defer ch.wait.Done()
-	
+
 	var teamid int64
-	
+
 	split := strings.Index(fullteam, "/")
 	orga := fullteam[1:split]
 	teamname := fullteam[split+1:]
 	opts := &github.ListOptions{}
-	
+
 	for {
 		teams, resp, err := client.Teams.ListTeams(ctx, orga, opts)
-		
+
 		if err != nil {
 			ch.err <- err
 			return
 		}
-		
+
 		for _, team := range teams {
 			if teamname == *team.Slug {
 				teamid = *team.ID
 				break
 			}
 		}
-		
+
 		if resp.NextPage == 0 {
 			break
 		}
-		
+
 		opts.Page = resp.NextPage
 	}
-	
+
 	if teamid == 0 {
 		ch.err <- errors.New(fmt.Sprintf("Failed to find team matching %v", teamname))
 		return
 	}
-	
+
 	opt := github.TeamListTeamMembersOptions{}
 	users, _, err := client.Teams.ListTeamMembers(ctx, teamid, &opt)
 	if err != nil {
@@ -165,14 +165,14 @@ func expandowners(ownertext string, ctx context.Context, ch comms) {
 		ch.wait.Add(1)
 		go finduseremail(ownertext, ctx, ch)
 	default:
-		ch.err <- errors.New(fmt.Sprintf("Do not understand user specification ", ownertext))
+		ch.err <- errors.New(fmt.Sprintf("Do not understand user specification %q", ownertext))
 	}
 }
 
 // Get is the "entrypoint" where a codeOwners struct is returned for calling Match on
-func Get(ctx context.Context, cl *github.Client, owner string, repo string) (codeOwners, error) {
+func Get(ctx context.Context, cl *github.Client, owner string, repo string) (CodeOwners, error) {
 	client = cl
-	obj := codeOwners{
+	obj := CodeOwners{
 		owner: owner,
 		repo:  repo,
 	}
@@ -205,7 +205,7 @@ func Get(ctx context.Context, cl *github.Client, owner string, repo string) (cod
 
 // Match a file to some github users (or email addresses)
 // called on a codeOwners struct
-func (co codeOwners) Match(ctx context.Context, path string) (users []*github.User, error_slice []error) {
+func (co CodeOwners) Match(ctx context.Context, path string) (users []*github.User, errorSlices []error) {
 	var owners []string
 	for _, pattern := range co.patterns {
 		match, _ := doublestar.Match(pattern.path, path)
@@ -216,8 +216,8 @@ func (co codeOwners) Match(ctx context.Context, path string) (users []*github.Us
 		}
 	}
 	if owners == nil {
-		error_slice = append(error_slice, errors.New("Failed to find owner"))
-		return nil, error_slice
+		errorSlices = append(errorSlices, errors.New("failed to find owner"))
+		return nil, errorSlices
 	}
 	var wg sync.WaitGroup
 	ch := comms{
@@ -234,24 +234,24 @@ func (co codeOwners) Match(ctx context.Context, path string) (users []*github.Us
 		close(ch.data)
 		close(ch.err)
 	}()
-	err_closed, data_closed := false, false
+	errClosed, dataClosed := false, false
 	for {
-		//if both channels are closed then we can stop
-		if err_closed && data_closed {
-			return users, error_slice
+		// If both channels are closed then we can stop
+		if errClosed && dataClosed {
+			return users, errorSlices
 		}
 		select {
 		case <-ctx.Done():
 			return // returning not to leak the goroutine
-		case err, err_ok := <-ch.err:
-			if !err_ok {
-				err_closed = true
+		case err, errOk := <-ch.err:
+			if !errOk {
+				errClosed = true
 			} else {
-				error_slice = append(error_slice, err)
+				errorSlices = append(errorSlices, err)
 			}
-		case user, data_ok := <-ch.data:
-			if !data_ok {
-				data_closed = true
+		case user, dataOk := <-ch.data:
+			if !dataOk {
+				dataClosed = true
 			} else {
 				users = append(users, user)
 			}

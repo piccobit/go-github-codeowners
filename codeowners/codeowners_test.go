@@ -291,7 +291,7 @@ func TestCodeOwnersString(t *testing.T) {
 		path:   "other.txt",
 		owners: names,
 	}
-	result := codeOwners{
+	result := CodeOwners{
 		owner:    "",
 		repo:     "",
 		patterns: owners,
