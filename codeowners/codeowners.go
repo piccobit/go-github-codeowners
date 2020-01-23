@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/bmatcuk/doublestar"
-	"github.com/google/go-github/v25/github"
+	"github.com/google/go-github/v29/github"
 	"github.com/rs/zerolog/log"
 )
 
