@@ -139,15 +139,25 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 		return
 	}
 
-	opt := github.TeamListTeamMembersOptions{}
-	users, _, err := client.Teams.ListTeamMembers(ctx, teamid, &opt)
-	if err != nil {
-		ch.err <- err
-		return
+	opt := github.TeamListTeamMembersOptions{
+		ListOptions: github.ListOptions{PerPage:100},
 	}
-	for _, user := range users {
-		ch.wait.Add(1)
-		go fetchuser(*user.Login, ctx, ch)
+
+	for {
+		users, resp, err := client.Teams.ListTeamMembers(ctx, teamid, &opt)
+		if err != nil {
+			ch.err <- err
+			return
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+
+		for _, user := range users {
+			ch.wait.Add(1)
+			go fetchuser(*user.Login, ctx, ch)
+		}
 	}
 }
 
