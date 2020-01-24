@@ -195,7 +195,15 @@ func Get(ctx context.Context, cl *github.Client, owner string, repo string) (Cod
 	log.Debug().Str("content", content).Msg("fetch")
 
 	for _, line := range strings.Split(content, "\n") {
-		words := strings.Fields(line)
+		// Trim line
+		l := strings.Trim(line, " ")
+
+		// Skip over comments
+		if l[0] == '#' {
+			break
+		}
+
+		words := strings.Fields(l)
 
 		if len(words) > 1 {
 			log.Debug().Strs("words", words).Msg("fetch")
