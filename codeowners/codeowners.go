@@ -140,7 +140,7 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 	}
 
 	opt := github.TeamListTeamMembersOptions{
-		ListOptions: github.ListOptions{PerPage:100},
+		ListOptions: github.ListOptions{PerPage: 100},
 	}
 
 	for {
