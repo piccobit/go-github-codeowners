@@ -139,6 +139,8 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 		return
 	}
 
+	log.Debug().Int64("teamid", teamid).Msg("Found team ID")
+
 	opt := github.TeamListTeamMembersOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
@@ -164,6 +166,9 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 // this takes an individual owner (team, email or login) and sends github.User objects to the data channel
 func expandowners(ownertext string, ctx context.Context, ch comms) {
 	defer ch.wait.Done()
+
+	log.Debug().Str("ownertext", ownertext).Msg("expandowners")
+
 	switch {
 	case strings.HasPrefix(ownertext, "@") && strings.Contains(ownertext, "/"):
 		ch.wait.Add(1)
@@ -192,7 +197,7 @@ func Get(ctx context.Context, cl *github.Client, owner string, repo string) (Cod
 		return obj, err
 	}
 
-	log.Debug().Str("content", content).Msg("fetch")
+	log.Debug().Str("content of CODEOWNERS", content).Msg("fetch")
 
 	for _, line := range strings.Split(content, "\n") {
 		// Trim line
@@ -230,7 +235,7 @@ func (co CodeOwners) Match(ctx context.Context, path string) (users []*github.Us
 		if match {
 			owners = pattern.owners
 
-			log.Debug().Interface("owners", owners).Interface("pattern", pattern).Msg("Found match")
+			log.Debug().Strs("owners", owners).Str("pattern.path", pattern.path).Msg("Found match")
 		}
 	}
 	if owners == nil {
