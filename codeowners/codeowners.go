@@ -203,9 +203,16 @@ func Get(ctx context.Context, cl *github.Client, owner string, repo string) (Cod
 		// Trim line
 		l := strings.Trim(line, " ")
 
+		log.Debug().Str("trimmed line", l).Msg("fetch")
+
+		// Skip empty lines
+		if len(l) == 0 {
+			continue
+		}
+
 		// Skip over comments
 		if l[0] == '#' {
-			break
+			continue
 		}
 
 		words := strings.Fields(l)
