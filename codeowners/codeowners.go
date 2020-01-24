@@ -152,13 +152,13 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 			return
 		}
 
-		if resp.NextPage == 0 {
-			break
-		}
-
 		for _, user := range users {
 			ch.wait.Add(1)
 			go fetchuser(*user.Login, ctx, ch)
+		}
+
+		if resp.NextPage == 0 {
+			break
 		}
 	}
 }
