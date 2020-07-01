@@ -9,7 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v32/github"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
