@@ -106,6 +106,7 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 	defer ch.wait.Done()
 
 	var teamid int64
+	var orgid int64
 
 	split := strings.Index(fullteam, "/")
 	orga := fullteam[1:split]
@@ -123,6 +124,7 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 		for _, team := range teams {
 			if teamname == *team.Slug {
 				teamid = *team.ID
+				orgid = team.GetOrganization().GetID()
 				break
 			}
 		}
@@ -146,7 +148,7 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 	}
 
 	for {
-		users, resp, err := client.Teams.ListTeamMembers(ctx, teamid, &opt)
+		users, resp, err := client.Teams.ListTeamMembersByID(ctx, orgid, teamid, &opt)
 		if err != nil {
 			ch.err <- err
 			return
