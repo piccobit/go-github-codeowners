@@ -125,6 +125,19 @@ func expandteam(fullteam string, ctx context.Context, ch comms) {
 			if teamname == *team.Slug {
 				teamid = *team.ID
 				orgid = team.GetOrganization().GetID()
+
+				if orgid == 0 {
+					tmpTeam, _, err := client.Teams.GetTeamBySlug(ctx, orga, teamname)
+
+					if err != nil {
+						ch.err <- errors.New(fmt.Sprintf("Failed to find organization for team %s", teamname))
+
+						return
+					}
+
+					orgid = tmpTeam.GetOrganization().GetID()
+				}
+
 				break
 			}
 		}
